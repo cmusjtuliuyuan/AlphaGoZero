@@ -128,14 +128,14 @@ def UCT(root_board, n_iteration):
             node.update(board.get_result(node._player_just_moved)) 
             node = node._parent
     # Output some information about the tree - can be omitted
-    print rootnode.TreeToString(0)
+    # print rootnode.TreeToString(0)
     # return the move that was most visited
     move, _ = max(rootnode._children.iteritems(), key=lambda act_node: act_node[1]._n_visits)
     return move
 
 class MCTSPlayer(object):
     """AI player based on MCTS"""
-    def __init__(self, n_iteration=400):
+    def __init__(self, n_iteration=1000):
         self._n_iteration=n_iteration
     
     def set_player_ind(self, p):
