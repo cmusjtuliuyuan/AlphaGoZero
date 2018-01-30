@@ -10,6 +10,8 @@ import numpy as np
 class Board(object):
     """
     board for the game
+    current_player means the one who play next
+    player_just_moved means the one who has already moved
     """
 
     def __init__(self, **kwargs):
@@ -113,10 +115,9 @@ class Board(object):
 
     def get_result(self, playerJustMoved):
         win, winner = self.has_a_winner()
-        current_player = self.players[0] if playerJustMoved == self.players[1] else self.players[1]
         if not win:
             return 0.5 # tie
-        if winner == current_player:
+        if winner == playerJustMoved:
             return 1.0 # win
         return 0.0 # fail
 
@@ -132,6 +133,8 @@ class Board(object):
     def get_current_player(self):
         return self.current_player
 
+    def get_player_just_moved(self):
+        return self.players[0] if self.current_player == self.players[1] else self.players[1]
 
 class Game(object):
     """

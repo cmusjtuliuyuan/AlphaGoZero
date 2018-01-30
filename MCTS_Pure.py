@@ -21,7 +21,7 @@ class TreeNode(object):
 
     def __init__(self, parent, move, board):
         self._parent = parent
-        self._player_just_moved = board.current_player
+        self._player_just_moved = board.get_player_just_moved()
         self._move = move # the move that got us to this node - "None" for the root node
         # We use copy here because it dictionary is passed by reference
         self._untried_moves = copy.copy(board.get_moves())
