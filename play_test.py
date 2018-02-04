@@ -4,11 +4,12 @@ Input your move in the format: 2,3
 The original verison is written by:
 @author: Junxiao Song
 @github: https://github.com/junxiaosong/AlphaZero_Gomoku/blob/master/play_human.py
-""" 
+"""
 
 from __future__ import print_function
 from game import Board, Game
-from MCTS_Pure import MCTSPlayer
+#from MCTS_Pure import MCTSPlayer
+from MCTS_AlphaGo_Style import MCTSPlayer
 import argparse
 
 class Human(object):
@@ -18,7 +19,7 @@ class Human(object):
 
     def __init__(self):
         self.player = None
-    
+
     def set_player_ind(self, p):
         self.player = p
 
@@ -49,15 +50,15 @@ def main():
     width, height = 5, 5
     try:
         board = Board(width=width, height=height, n_in_row=n)
-        game = Game(board)      
-        
+        game = Game(board)
+
         player1 = Human() if args.player1=='human' else MCTSPlayer()
-        player2 = Human() if args.player2=='human' else MCTSPlayer()                 
-        
+        player2 = Human() if args.player2=='human' else MCTSPlayer()
+
         # set start_player=0 for human first
         game.start_play(player1, player2, start_player=0, is_shown=1)
     except KeyboardInterrupt:
         print('\n\rquit')
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     main()
