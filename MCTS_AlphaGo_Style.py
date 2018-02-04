@@ -19,22 +19,19 @@ class TreeNode(object):
         We need player_just_moved because n_wins depends on it.
     """
 
-    def __init__(self, parent, move, board):
+    def __init__(self, parent, move, player_just_moved):
         self._parent = parent
-        self._player_just_moved = board.current_player
+        self._player_just_moved = player_just_moved
         self._move = move # the move that got us to this node - "None" for the root node
-        # We use copy here because it dictionary is passed by reference
-        self._untried_moves = copy.copy(board.get_moves())
         self._children = {}  # a map from action to TreeNode
         self._n_visits = 0.0
         self._n_wins = 0.0
 
-    def expand(self, move, new_board):
-        """ Remove m from untriedMoves and add a new child node for this move.
+    def expand(self, move, player_just_moved):
+        """ Add a new child node for this move.
             Return the added child node
         """
-        self._untried_moves.remove(move)
-        new_node = TreeNode(self, move, new_board)
+        new_node = TreeNode(self, move, player_just_moved)
         self._children[move] = new_node
         return new_node
 
@@ -56,25 +53,18 @@ class TreeNode(object):
         self._n_visits += 1.0
         self._n_wins += result
     
-    def get_moves(self):
-        """Get avaliable moves
-        """
-        return self._untried_moves
+    def get_already_moved(self):
+        return set(self._children.keys())
 
     def is_leaf(self):
         """Check if leaf node (i.e. no nodes below this have been expanded).
         """
         return len(self._children) == 0
 
-    def is_all_tried(self):
-        """Check whether we have already tired all moves
-        """
-        return len(self._untried_moves) == 0
-
     def __repr__(self):
         return "[M:" + str(self._move) +\
                " W/V:" + str(self._n_wins) + "/" + str(self._n_visits) +\
-               " U:" + str(self._untried_moves) + "]"
+               " M:" + str(self.get_already_moved()) + "]"
 
     def TreeToString(self, indent):
         s = self.IndentString(indent) + str(self)
@@ -88,18 +78,14 @@ class TreeNode(object):
             s += "| "
         return s
 
-    def ChildrenToString(self):
-        s = ""
-        for c_move, c_node in self._children.iteritems():
-             s += str(c_node) + "\n"
-        return s
-
 def UCT(root_board, n_iteration):
     """ Conduct a UCT search for n_iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in the range [0.0, 1.0]."""
+    def get_untried_moves(board, node):
+        return  set(board.get_moves())-node.get_already_moved()
 
-    rootnode = TreeNode(parent=None, move=None, board=root_board)
+    rootnode = TreeNode(parent=None, move=None, player_just_moved=root_board.get_player_just_moved())
 
     for i in range(n_iteration):
         node = rootnode
@@ -107,16 +93,16 @@ def UCT(root_board, n_iteration):
 
         # Selection: Starting at root node R, recursively select optimal child nodes (explained below)
         # until a leaf node L is reached.
-        while node.is_all_tried() and not node.is_leaf(): #node is fully expanded and non-terminal
+        while len(get_untried_moves(board, node))==0 and not node.is_leaf(): #node is fully expanded and non-terminal
             move, node = node.UCT_select()
             board.do_move(move)
 
         # Expansion: If L is a not a terminal node (i.e. it does not end the game) then create one
         # or more child nodes and select one C.
-        if not node.is_all_tried(): # if we can expand
-            move = random.choice(node.get_moves())
+        if len(get_untried_moves(board, node))!=0: # if we can expand
+            move = random.sample(get_untried_moves(board, node),1)[0]
             board.do_move(move)
-            node = node.expand(move, board)
+            node = node.expand(move, board.get_player_just_moved())
 
         # Simulation: Run a simulated playout from C until a result is achieved.
         while len(board.get_moves()) != 0: # while state is non-terminal
