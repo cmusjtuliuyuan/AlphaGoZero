@@ -2,7 +2,7 @@
 """
 @author: Junxiao Song
 @github: https://github.com/junxiaosong/AlphaZero_Gomoku/blob/master/game.py
-""" 
+"""
 
 from __future__ import print_function
 import numpy as np
@@ -20,12 +20,12 @@ class Board(object):
         self.states = {} # board states, key:move as location on the board, value:player as pieces type
         self.n_in_row = int(kwargs.get('n_in_row', 5)) # need how many pieces in a row to win
         self.players = [1, 2] # player1 and player2
-        
+
     def init_board(self, start_player=0):
         if self.width < self.n_in_row or self.height < self.n_in_row:
             raise Exception('board width and height can not less than %d' % self.n_in_row)
-        self.current_player = self.players[start_player]  # start player        
-        self.availables = list(range(self.width * self.height)) # available moves 
+        self.current_player = self.players[start_player]  # start player
+        self.availables = list(range(self.width * self.height)) # available moves
         self.states = {} # board states, key:move as location on the board, value:player as pieces type
         self.last_move = -1
 
@@ -37,7 +37,7 @@ class Board(object):
             return self.availables
 
     def move_to_location(self, move):
-        """       
+        """
         3*3 board's moves like:
         0 1 2
         3 4 5
@@ -58,18 +58,18 @@ class Board(object):
             return -1
         return move
 
-    def current_state(self): 
+    def current_state(self):
         """return the board state from the perspective of the current player
         shape: 4*width*height"""
-        
+
         square_state = np.zeros((4, self.width, self.height))
         if self.states:
             moves, players = np.array(list(zip(*self.states.items())))
             move_curr = moves[players == self.current_player]
-            move_oppo = moves[players != self.current_player]                           
+            move_oppo = moves[players != self.current_player]
             square_state[0][move_curr // self.width, move_curr % self.height] = 1.0
-            square_state[1][move_oppo // self.width, move_oppo % self.height] = 1.0   
-            square_state[2][self.last_move //self.width, self.last_move % self.height] = 1.0 # last move indication   
+            square_state[1][move_oppo // self.width, move_oppo % self.height] = 1.0
+            square_state[2][self.last_move //self.width, self.last_move % self.height] = 1.0 # last move indication
         if len(self.states)%2 == 0:
             square_state[3][:,:] = 1.0
         return square_state
@@ -77,7 +77,7 @@ class Board(object):
     def do_move(self, move):
         self.states[move] = self.current_player
         self.availables.remove(move)
-        self.current_player = self.players[0] if self.current_player == self.players[1] else self.players[1] 
+        self.current_player = self.players[0] if self.current_player == self.players[1] else self.players[1]
         self.last_move = move
 
     def has_a_winner(self):
@@ -126,7 +126,7 @@ class Board(object):
         win, winner = self.has_a_winner()
         if win:
             return True, winner
-        elif not len(self.availables):#            
+        elif not len(self.availables):#
             return True, -1
         return False, -1
 
@@ -169,7 +169,7 @@ class Game(object):
                 else:
                     print('_'.center(8), end='')
             print('\r\n\r\n')
-            
+
     def start_play(self, player1, player2, start_player=0, is_shown=1):
         """
         start a game between two players
@@ -186,7 +186,7 @@ class Game(object):
         while(1):
             current_player = self.board.get_current_player()
             player_in_turn = players[current_player]
-            move = player_in_turn.get_action(self.board)
+            move, _ = player_in_turn.get_action(self.board)
             self.board.do_move(move)
             if is_shown:
                 self.graphic(self.board, player1.player, player2.player)
@@ -198,3 +198,35 @@ class Game(object):
                     else:
                         print("Game end. Tie")
                 return winner
+
+    def AlphaGo_self_play(self, player, is_shown=0, temp=1e-5, dirichlet_weight=.0):
+        """ start a self-play game using a MCTS player, reuse the search tree
+        store the self-play data: (state, mcts_probs, z)
+        """
+        self.board.init_board()
+        p1, p2 = self.board.players
+        states, mcts_probs, current_players = [], [], []
+        while(1):
+            move, [moves, move_probs] = player.get_action(self.board, temp, dirichlet_weight)
+            # store the data
+            states.append(self.board.current_state())
+            mcts_probs.append([moves, move_probs])
+            print(str(moves)+str(move_probs))
+            current_players.append(self.board.current_player)
+            # perform a move
+            self.board.do_move(move)
+            if is_shown:
+                self.graphic(self.board, p1, p2)
+            end, winner = self.board.game_end()
+            if end:
+                # winner from the perspective of the current player of each state
+                winners_z = np.zeros(len(current_players))
+                if winner != -1:
+                    winners_z[np.array(current_players) == winner] = 1.0
+                    winners_z[np.array(current_players) != winner] = -1.0
+                if is_shown:
+                    if winner != -1:
+                        print("Game end. Winner is player:", winner)
+                    else:
+                        print("Game end. Tie")
+                return winner, zip(states, mcts_probs, winners_z)

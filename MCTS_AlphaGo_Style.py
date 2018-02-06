@@ -151,7 +151,7 @@ def UCT(root_board, n_iteration, NN_fn, temp=1.0, c_puct=5):
     return moves, move_probs
 
 
-class MCTSPlayer(object):
+class AlphaGoPlayer(object):
     """AI player based on MCTS"""
     def __init__(self, n_iteration=1000, NN_fn=fake_NN):
         self._n_iteration=n_iteration
@@ -167,7 +167,7 @@ class MCTSPlayer(object):
             move = np.random.choice(moves, p=(1-dirichlet_weight)*move_probs \
                 + dirichlet_weight*np.random.dirichlet(0.3*np.ones(len(move_probs))))
             print 'output position:', move
-            return move
+            return move, [moves, move_probs]
         else:
             print("WARNING: the board is full")
 

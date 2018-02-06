@@ -10,7 +10,7 @@ It is modified to Upper Confidence Bounds for Trees (UCT) http://mcts.ai/index.h
 @github: https://github.com/cmusjtuliuyuan/AlphaGoZero/blob/master/MCTS_Pure.py
 """
 import numpy as np
-import copy 
+import copy
 import random
 import math
 
@@ -52,7 +52,7 @@ class TreeNode(object):
         """
         self._n_visits += 1.0
         self._n_wins += result
-    
+
     def get_already_moved(self):
         return set(self._children.keys())
 
@@ -111,7 +111,7 @@ def UCT(root_board, n_iteration):
         # Backpropagate: Update the current move sequence with the simulation result.
         while node != None: # backpropagate from the expanded node and work back to the root node
             # state is terminal. Update node with result from POV of node._player_just_moved
-            node.update(board.get_result(node._player_just_moved)) 
+            node.update(board.get_result(node._player_just_moved))
             node = node._parent
     # Output some information about the tree - can be omitted
     # print rootnode.TreeToString(0)
@@ -123,18 +123,18 @@ class MCTSPlayer(object):
     """AI player based on MCTS"""
     def __init__(self, n_iteration=1000):
         self._n_iteration=n_iteration
-    
+
     def set_player_ind(self, p):
         self.player = p
-    
+
     def get_action(self, board):
         sensible_moves = board.availables
         if len(sensible_moves) > 0:
             move = UCT(board, self._n_iteration)
             print 'output position:', move
-            return move
-        else:            
+            return move, None
+        else:
             print("WARNING: the board is full")
 
     def __str__(self):
-        return "MCTS {}".format(self.player)  
+        return "MCTS {}".format(self.player)

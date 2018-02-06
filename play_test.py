@@ -8,8 +8,9 @@ The original verison is written by:
 
 from __future__ import print_function
 from game import Board, Game
-#from MCTS_Pure import MCTSPlayer
-from MCTS_AlphaGo_Style import MCTSPlayer
+from MCTS_Pure import MCTSPlayer
+from MCTS_AlphaGo_Style import AlphaGoPlayer
+from model import PolicyValueNet
 import argparse
 
 class Human(object):
@@ -34,7 +35,7 @@ class Human(object):
         if move == -1 or move not in board.availables:
             print("invalid move")
             move = self.get_action(board)
-        return move
+        return move, None
 
     def __str__(self):
         return "Human {}".format(self.player)
@@ -42,21 +43,37 @@ class Human(object):
 
 def main():
     parser = argparse.ArgumentParser(description='Test')
-    parser.add_argument('--player1', default='MCTS', help='player1 tpye')
+    parser.add_argument('--player1', default='AlphaGo', help='player1 tpye')
     parser.add_argument('--player2', default='human', help='player2 tpye')
+    parser.add_argument('--self_play', default=1, type=int, help='1 means self play, 0 means not')
     args = parser.parse_args()
 
     n = 3
     width, height = 5, 5
+    AlphaGoNet = PolicyValueNet(width, height)
     try:
         board = Board(width=width, height=height, n_in_row=n)
         game = Game(board)
 
-        player1 = Human() if args.player1=='human' else MCTSPlayer()
-        player2 = Human() if args.player2=='human' else MCTSPlayer()
+        if args.self_play:
+            player = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn)
+            game.AlphaGo_self_play(player, is_shown=1, temp=1e-5, dirichlet_weight=.0)
+        else:
+            if args.player1 == 'human':
+                player1 = Human()
+            if args.player1 == 'MCTS':
+                player1 = MCTSPlayer()
+            if args.player1 == 'AlphaGo':
+                player1 = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn)
 
-        # set start_player=0 for human first
-        game.start_play(player1, player2, start_player=0, is_shown=1)
+            if args.player2 == 'human':
+                player2 = Human()
+            if args.player2 == 'MCTS':
+                player2 = MCTSPlayer()
+            if args.player2 == 'AlphaGo':
+                player2 = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn)
+            # set start_player=0 for human first
+            game.start_play(player1, player2, start_player=0, is_shown=1)
     except KeyboardInterrupt:
         print('\n\rquit')
 
