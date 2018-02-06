@@ -100,7 +100,7 @@ class TreeNode(object):
             s += "| "
         return s
 
-def UCT(root_board, n_iteration, c_puct=5):
+def UCT(root_board, n_iteration, temp=1.0, c_puct=5):
     """ Conduct a UCT search for n_iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in the range [0.0, 1.0]."""
@@ -139,23 +139,31 @@ def UCT(root_board, n_iteration, c_puct=5):
             node = node._parent
     # Output some information about the tree - can be omitted
     # print rootnode.TreeToString(0)
-    # return the move that was most visited
-    move, _ = max(rootnode._children.iteritems(), key=lambda act_node: act_node[1]._n_visits)
-    return move
+    # return the move and prob pairs
+    def softmax(x):
+        probs = np.exp(x - np.max(x))
+        probs /= np.sum(probs)
+        return probs
+    move_visits = [(move, node._n_visits) for move, node in rootnode._children.iteritems()]
+    moves, visits = zip(*move_visits)
+    move_probs = softmax(1.0/temp * np.log(np.array(visits) + 1e-10))
+    return moves, move_probs
 
 
 class MCTSPlayer(object):
     """AI player based on MCTS"""
-    def __init__(self, n_iteration=1000):
+    def __init__(self, n_iteration=400):
         self._n_iteration=n_iteration
 
     def set_player_ind(self, p):
         self.player = p
 
-    def get_action(self, board):
+    def get_action(self, board, temp=1e-3, dirichlet_weight=.0):
         sensible_moves = board.availables
         if len(sensible_moves) > 0:
-            move = UCT(board, self._n_iteration)
+            moves, move_probs = UCT(board, self._n_iteration, temp)
+            move = np.random.choice(moves, p=(1-dirichlet_weight)*move_probs \
+                + dirichlet_weight*np.random.dirichlet(0.3*np.ones(len(move_probs))))
             print 'output position:', move
             return move
         else:
