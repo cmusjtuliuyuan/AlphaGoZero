@@ -57,7 +57,7 @@ def main():
 
         if args.self_play:
             player = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn)
-            game.AlphaGo_self_play(player, is_shown=1, temp=1e-5, dirichlet_weight=.0)
+            game.AlphaGo_self_play(player, is_shown=1)
         else:
             if args.player1 == 'human':
                 player1 = Human()

@@ -2,6 +2,7 @@
 """
 @author: Junxiao Song
 @github: https://github.com/junxiaosong/AlphaZero_Gomoku/blob/master/game.py
+The self_play part is modified by Yuan Liu
 """
 
 from __future__ import print_function
@@ -199,19 +200,25 @@ class Game(object):
                         print("Game end. Tie")
                 return winner
 
-    def AlphaGo_self_play(self, player, is_shown=0, temp=1e-5, dirichlet_weight=.0):
+    def AlphaGo_self_play(self, player, is_shown=0, temp_switch_step=10):
         """ start a self-play game using a MCTS player, reuse the search tree
         store the self-play data: (state, mcts_probs, z)
         """
         self.board.init_board()
         p1, p2 = self.board.players
         states, mcts_probs, current_players = [], [], []
+        i = 0
+        temp = 1.0
+        dirichlet_weight = 0.0
         while(1):
+            i += 1
+            if i > temp_switch_step:
+                temp = 1e-5
+                dirichlet_weight = 0.25
             move, [moves, move_probs] = player.get_action(self.board, temp, dirichlet_weight)
             # store the data
             states.append(self.board.current_state())
             mcts_probs.append([moves, move_probs])
-            print(str(moves)+str(move_probs))
             current_players.append(self.board.current_player)
             # perform a move
             self.board.do_move(move)
