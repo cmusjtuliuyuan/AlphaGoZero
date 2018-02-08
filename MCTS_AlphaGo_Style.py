@@ -166,10 +166,9 @@ class AlphaGoPlayer(object):
             moves, move_probs = UCT(board, self._n_iteration, self._NN_fn, temp)
             move = np.random.choice(moves, p=(1-dirichlet_weight)*move_probs \
                 + dirichlet_weight*np.random.dirichlet(0.3*np.ones(len(move_probs))))
-            print 'output position:', move
             return move, [moves, move_probs]
         else:
-            print("WARNING: the board is full")
+            pass
 
     def __str__(self):
-        return "MCTS {}".format(self.player)
+        return "AlphaGoPlayer {}".format(self.player)

@@ -131,7 +131,6 @@ class MCTSPlayer(object):
         sensible_moves = board.availables
         if len(sensible_moves) > 0:
             move = UCT(board, self._n_iteration)
-            print 'output position:', move
             return move, None
         else:
             print("WARNING: the board is full")

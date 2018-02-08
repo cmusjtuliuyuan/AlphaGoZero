@@ -171,7 +171,7 @@ class Game(object):
                     print('_'.center(8), end='')
             print('\r\n\r\n')
 
-    def start_play(self, player1, player2, start_player=0, is_shown=1):
+    def start_play(self, player1, player2, start_player=0, is_shown=0):
         """
         start a game between two players
         """
@@ -200,6 +200,14 @@ class Game(object):
                         print("Game end. Tie")
                 return winner
 
+    def get_mcts_prob(self, moves, move_probs, width, height):
+        mcts_prob = np.zeros((width, height))
+        for move, move_prob in zip(moves, move_probs):
+            h = move  // self.board.width
+            w = move  %  self.board.width
+            mcts_prob[h,w] = move_prob
+        return mcts_prob
+
     def AlphaGo_self_play(self, player, is_shown=0, temp_switch_step=10):
         """ start a self-play game using a MCTS player, reuse the search tree
         store the self-play data: (state, mcts_probs, z)
@@ -218,7 +226,7 @@ class Game(object):
             move, [moves, move_probs] = player.get_action(self.board, temp, dirichlet_weight)
             # store the data
             states.append(self.board.current_state())
-            mcts_probs.append([moves, move_probs])
+            mcts_probs.append(self.get_mcts_prob(moves, move_probs, self.board.width, self.board.height))
             current_players.append(self.board.current_player)
             # perform a move
             self.board.do_move(move)
