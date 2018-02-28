@@ -70,7 +70,10 @@ class PolicyValueNet():
             self.policy_value_net = Net(board_width, board_height).cuda()
         else:
             self.policy_value_net = Net(board_width, board_height)
-        self.optimizer = optim.Adam(self.policy_value_net.parameters(), weight_decay=self.l2_const)
+        self.optimizer = optim.SGD(self.policy_value_net.parameters(),
+                                   weight_decay=self.l2_const,
+                                   momentum=0.9,
+                                   lr=0.001)
 
         if net_params:
             self.policy_value_net.load_state_dict(net_params)
@@ -112,7 +115,7 @@ class PolicyValueNet():
         # define the loss = (z - v)^2 - pi^T * log(p) + c||theta||^2 (Note: the L2 penalty is incorporated in optimizer)
         value_loss = F.mse_loss(value.view(-1), winner_batch)
         policy_loss = -torch.mean(torch.sum(mcts_probs * torch.log(act_probs), 1))
-        loss = 0.01*value_loss + policy_loss
+        loss = value_loss + policy_loss
         # backward and optimize
         loss.backward()
         self.optimizer.step()

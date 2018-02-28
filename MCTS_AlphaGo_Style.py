@@ -34,7 +34,7 @@ def Net_to_movelist(NN_fn, board, node):
     return move_priorP_pairs, v
 
 def get_untried_moves(board, node):
-    return  set(board.get_moves())-node.get_already_moved()
+    return set(board.get_moves())-node.get_already_moved()
 
 
 class TreeNode(object):
@@ -101,7 +101,7 @@ class TreeNode(object):
             s += "| "
         return s
 
-def UCT(root_board, n_iteration, NN_fn, temp=1.0, c_puct=5):
+def UCT(root_board, n_iteration, NN_fn, temp=1.0, c_puct=1.0):
     """ Conduct a UCT search for n_iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in the range [0.0, 1.0]."""
@@ -153,7 +153,7 @@ def UCT(root_board, n_iteration, NN_fn, temp=1.0, c_puct=5):
 
 class AlphaGoPlayer(object):
     """AI player based on MCTS"""
-    def __init__(self, n_iteration=1000, NN_fn=fake_NN):
+    def __init__(self, n_iteration=400, NN_fn=fake_NN):
         self._n_iteration=n_iteration
         self._NN_fn = NN_fn
 

@@ -12,6 +12,7 @@ from MCTS_Pure import MCTSPlayer
 from MCTS_AlphaGo_Style import AlphaGoPlayer
 from model import PolicyValueNet
 import argparse
+import torch
 
 class Human(object):
     """
@@ -44,12 +45,12 @@ class Human(object):
 def main():
     parser = argparse.ArgumentParser(description='Test')
     parser.add_argument('--player1', default='AlphaGo', help='player1 tpye')
-    parser.add_argument('--player2', default='human', help='player2 tpye')
-    parser.add_argument('--self_play', default=1, type=int, help='1 means self play, 0 means not')
+    parser.add_argument('--player2', default='MCTS', help='player2 tpye')
+    parser.add_argument('--self_play', default=0, type=int, help='1 means self play, 0 means not')
     args = parser.parse_args()
 
-    n = 3
-    width, height = 5, 5
+    n = 4
+    width, height = 6, 6
     AlphaGoNet = PolicyValueNet(width, height)
     try:
         board = Board(width=width, height=height, n_in_row=n)
@@ -64,7 +65,8 @@ def main():
             if args.player1 == 'MCTS':
                 player1 = MCTSPlayer()
             if args.player1 == 'AlphaGo':
-                player1 = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn)
+                AlphaGoNet.policy_value_net.load_state_dict(torch.load('model/current_best.mdl'))
+                player1 = AlphaGoPlayer(NN_fn=AlphaGoNet.policy_value_fn, n_iteration=1000)
 
             if args.player2 == 'human':
                 player2 = Human()
